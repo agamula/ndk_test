@@ -1,0 +1,80 @@
+apply plugin: 'com.android.model.application'
+
+model {
+    android {
+        compileSdkVersion = 23
+        buildToolsVersion = "23.0.0"
+
+        defaultConfig.with {
+            applicationId = "com.proggroup.ndktest"
+            minSdkVersion.apiLevel = 15
+            targetSdkVersion.apiLevel = 23
+            versionCode = 1
+            versionName = "1.0"
+
+            buildConfigFields.with {
+                create() {
+                    type = "int"
+                    name = "VALUE"
+                    value = "1"
+                }
+            }
+        }
+    }
+
+    android.ndk {
+        moduleName ="ndkfoo"
+        cppFlags   += "-I${file("src/main/jni/cpufeatures")}".toString()
+        cppFlags   += "-I${file("src/main/jni/native_app_glue")}".toString()
+        cppFlags   += "-I${file("src/main/jni/ndk_helper")}".toString()
+
+        // CFlags is configured in similiar way as cppFlags
+        // CFlags    += "-I${file("src/main/jni/native_app_glue")}".toString()
+
+        ldLibs     += ["android", "EGL", "GLESv2","log"]
+        stl         = "stlport_static"
+    }
+
+    android.sources {
+        main {
+            jni {
+                source {
+                    srcDirs 'src/main/jni'
+                }
+            }
+            java {
+                source {
+                    srcDir 'src'
+                }
+            }
+        }
+    }
+
+    android.productFlavors {
+        create ("arm7") {
+            ndk.abiFilters += "armeabi-v7a"
+        }
+        create ("arm8") {
+            ndk.abiFilters += "arm64-v8a"
+        }
+        create ("x86-32") {
+            ndk.abiFilters += "x86"
+        }
+        // for detailed abiFilter descriptions, refer to "Supported ABIs" @
+        // https://developer.android.com/ndk/guides/abis.html#sa
+        // build one including all productFlavors
+        create("all")
+    }
+
+    android.buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles += file('proguard-rules.pro')
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:23.0.0'
+}
